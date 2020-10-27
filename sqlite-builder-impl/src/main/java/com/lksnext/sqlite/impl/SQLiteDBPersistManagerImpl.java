@@ -55,7 +55,9 @@ public class SQLiteDBPersistManagerImpl implements SQLiteDBPersistManager {
 
         String newMD5 = calculateMD5(sqliteConfig.getTemporalPath(), database);
         SQLiteDBMetadata metadata = sqliteDBMetadataManager.loadMetadata(database);
-        if (!metadata.getCurrent().getMd5().equals(newMD5)) {
+        SQLiteDBFileInfo current = metadata.getCurrent();
+        
+        if (current==null || !current.getMd5().equals(newMD5)) {
             LOG.info("New database generated {} {} {}", owner, database, newMD5);
             URI srcURI = SQLitePathUtils.getTemporalDBPath(sqliteConfig.getTemporalPath(), database);
             URI destURI = SQLitePathUtils.getMasterdataDBPath(sqliteConfig.getDatabasePath(), database, newMD5);

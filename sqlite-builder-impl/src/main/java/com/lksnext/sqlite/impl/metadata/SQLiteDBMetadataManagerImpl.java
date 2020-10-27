@@ -77,14 +77,17 @@ public class SQLiteDBMetadataManagerImpl implements SQLiteDBMetadataManager {
 	@Override
 	public List<SQLiteDBFileInfo> addDBtoMetadata(SQLiteDBMetadata sqliteDBMetadata, String owner, String database,
 			String file, String md5) throws URISyntaxException, IOException {
-		if (!StringUtils.isEmpty(sqliteDBMetadata.getCurrent().getMd5())) {
-			SQLiteDBFileInfo current = new SQLiteDBFileInfo();
-			current.setFile(sqliteDBMetadata.getCurrent().getFile());
-			current.setMd5(sqliteDBMetadata.getCurrent().getMd5());
+		
+		SQLiteDBFileInfo current = sqliteDBMetadata.getCurrent();
+		
+		if (current!=null ) {
 			sqliteDBMetadata.getPrevious().add(0, current);
 		}
-		sqliteDBMetadata.getCurrent().setFile(file);
-		sqliteDBMetadata.getCurrent().setMd5(md5);
+		
+		current = new SQLiteDBFileInfo();
+		current.setFile(file);
+		current.setMd5(md5);
+		sqliteDBMetadata.setCurrent(current);
 
 		List<SQLiteDBFileInfo> toDelete = new ArrayList<SQLiteDBFileInfo>();
 		if (cleanupStrategies != null) {

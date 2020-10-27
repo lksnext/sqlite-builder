@@ -9,7 +9,7 @@ public class SQLiteDBMetadata {
 	public List<SQLiteDBFileInfo> previous;
 	
 	public SQLiteDBMetadata() {
-		current= new SQLiteDBFileInfo();
+		current= null;
 		previous = new ArrayList<SQLiteDBFileInfo>();
 	}
 
