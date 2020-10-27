@@ -15,17 +15,15 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
+import com.lksnext.sqlite.SQLiteDBCleanupStrategy;
 import com.lksnext.sqlite.config.SQLitePropertyConfig;
 import com.lksnext.sqlite.file.FileManager;
-import com.lksnext.sqlite.impl.SQLiteDBPersistManagerImpl;
 import com.lksnext.sqlite.impl.util.SQLitePathUtils;
 import com.lksnext.sqlite.metadata.SQLiteDBFileInfo;
 import com.lksnext.sqlite.metadata.SQLiteDBMetadata;
@@ -33,14 +31,15 @@ import com.lksnext.sqlite.metadata.SQLiteDBMetadataManager;
 
 @Service
 public class SQLiteDBMetadataManagerImpl implements SQLiteDBMetadataManager {
-	
-	 private static final Logger LOG = LoggerFactory.getLogger(SQLiteDBPersistManagerImpl.class);
 
 	@Autowired
 	private FileManager fileManager;
 
 	@Autowired
 	private SQLitePropertyConfig sqliteConfig;
+
+	@Autowired(required = false)
+	private List<SQLiteDBCleanupStrategy> cleanupStrategies;
 
 	@Override
 	public SQLiteDBMetadata loadMetadata(String database) throws URISyntaxException, IOException {
@@ -76,7 +75,7 @@ public class SQLiteDBMetadataManagerImpl implements SQLiteDBMetadataManager {
 	}
 
 	@Override
-	public List<SQLiteDBFileInfo> addDBtoMetadata(SQLiteDBMetadata sqliteDBMetadata, String user, String database,
+	public List<SQLiteDBFileInfo> addDBtoMetadata(SQLiteDBMetadata sqliteDBMetadata, String owner, String database,
 			String file, String md5) throws URISyntaxException, IOException {
 		if (!StringUtils.isEmpty(sqliteDBMetadata.getCurrent().getMd5())) {
 			SQLiteDBFileInfo current = new SQLiteDBFileInfo();
@@ -87,10 +86,17 @@ public class SQLiteDBMetadataManagerImpl implements SQLiteDBMetadataManager {
 		sqliteDBMetadata.getCurrent().setFile(file);
 		sqliteDBMetadata.getCurrent().setMd5(md5);
 
-		List<SQLiteDBFileInfo> toDeleteFromContacts = metadataCleanupBasedOnContacts(sqliteDBMetadata, user, database);
+		List<SQLiteDBFileInfo> toDelete = new ArrayList<SQLiteDBFileInfo>();
+		if (cleanupStrategies != null) {
+			for (SQLiteDBCleanupStrategy strategy : cleanupStrategies) {
+				List<SQLiteDBFileInfo> toDeleteFromStrategy = strategy.selectDbsToCleanup(sqliteDBMetadata, owner,
+						database);
+				toDelete.addAll(toDeleteFromStrategy);
+			}
+		}
+
 		List<SQLiteDBFileInfo> toDeleteFromMaxFiles = metadataCleanupBasedOnMaxDBs(sqliteDBMetadata);
-		return Stream.of(toDeleteFromContacts, toDeleteFromMaxFiles).flatMap(Collection::stream)
-				.collect(Collectors.toList());
+		return Stream.of(toDelete, toDeleteFromMaxFiles).flatMap(Collection::stream).collect(Collectors.toList());
 	}
 
 	private List<SQLiteDBFileInfo> metadataCleanupBasedOnMaxDBs(SQLiteDBMetadata sqliteDBMetadata) {
@@ -107,37 +113,6 @@ public class SQLiteDBMetadataManagerImpl implements SQLiteDBMetadataManager {
 		}
 
 		return Collections.<SQLiteDBFileInfo>emptyList();
-	}
-
-	private List<SQLiteDBFileInfo> metadataCleanupBasedOnContacts(SQLiteDBMetadata sqliteDBMetadata, String user,
-			String database) {
-		try {
-			List<SQLiteDBFileInfo> previous = sqliteDBMetadata.getPrevious();
-			if (previous == null || previous.size() == 0) {
-				return Collections.<SQLiteDBFileInfo>emptyList();
-			}
-
-			List<SQLiteDBFileInfo> toKeep = new ArrayList<SQLiteDBFileInfo>();
-			List<SQLiteDBFileInfo> toDelete = new ArrayList<SQLiteDBFileInfo>();
-			
-			//TODO jurkiri
-			/*String lastSeendMd5 = syncStatusManger.findLastUserCheckpoint(user, database);
-			String lastSentMd5 = syncStatusManger.findLastUserCheckpoint(user, "last-sent-" + database);
-
-			for (SQLiteDBFileInfo info : previous) {
-				if (info.getMd5().equals(lastSeendMd5) || info.getMd5().equals(lastSentMd5)) {
-					toKeep.add(info);
-				} else {
-					toDelete.add(info);
-				}
-			}
-
-			sqliteDBMetadata.setPrevious(toKeep);*/
-			return toDelete;
-		} catch (Exception e) {
-			LOG.error("Error purging based on contacts", e);
-			return Collections.<SQLiteDBFileInfo>emptyList();
-		}
 	}
 
 }

@@ -153,7 +153,8 @@ public class NamedParameterStatement implements AutoCloseable {
 						indexList = new LinkedList();
 						paramMap.put(name, indexList);
 					}
-					indexList.add(new Integer(index));
+
+					indexList.add(Integer.valueOf(index));
 
 					index++;
 				}
@@ -187,7 +188,7 @@ public class NamedParameterStatement implements AutoCloseable {
 	private int[] getIndexes(String name) {
 		int[] indexes = (int[]) indexMap.get(name);
 		if (indexes == null) {
-			//Ignore missing parameters
+			// Ignore missing parameters
 			return new int[0];
 		}
 		return indexes;

@@ -45,23 +45,23 @@ public class SQLiteDBPersistManagerImpl implements SQLiteDBPersistManager {
     private SQLiteDBMetadataManager sqliteDBMetadataManager;
 
     @Override
-    public void persist(String user, String database) throws URISyntaxException, IOException {
-        persist(user, database, true);
+    public void persist(String owner, String database) throws URISyntaxException, IOException {
+        persist(owner, database, true);
     }
 
     @Override
-    public void persist(String user, String database, boolean createDiffPatches)
+    public void persist(String owner, String database, boolean createDiffPatches)
             throws URISyntaxException, IOException {
 
         String newMD5 = calculateMD5(sqliteConfig.getTemporalPath(), database);
         SQLiteDBMetadata metadata = sqliteDBMetadataManager.loadMetadata(database);
         if (!metadata.getCurrent().getMd5().equals(newMD5)) {
-            LOG.info("New database generated {} {} {}", user, database, newMD5);
+            LOG.info("New database generated {} {} {}", owner, database, newMD5);
             URI srcURI = SQLitePathUtils.getTemporalDBPath(sqliteConfig.getTemporalPath(), database);
             URI destURI = SQLitePathUtils.getMasterdataDBPath(sqliteConfig.getDatabasePath(), database, newMD5);
             fileManager.moveFile(srcURI, destURI);
 
-            List<SQLiteDBFileInfo> dbsToDelete = sqliteDBMetadataManager.addDBtoMetadata(metadata, user, database,
+            List<SQLiteDBFileInfo> dbsToDelete = sqliteDBMetadataManager.addDBtoMetadata(metadata, owner, database,
                     Paths.get(destURI).toString(), newMD5);
             
             updateOrCreateSymLinkToLatest(metadata, sqliteConfig.getDatabasePath(), database);
@@ -155,19 +155,19 @@ public class SQLiteDBPersistManagerImpl implements SQLiteDBPersistManager {
         return md5;
     }
 
-    private void updateOrCreateSymLinkToLatest(SQLiteDBMetadata sqliteDBMetadata, URI targetDir, String center) {
+    private void updateOrCreateSymLinkToLatest(SQLiteDBMetadata sqliteDBMetadata, URI targetDir, String database) {
         try {
-            fileManager.removeFile(SQLitePathUtils.getMasterdataLatestDBPath(targetDir, center));
-            Files.createSymbolicLink(Paths.get(SQLitePathUtils.getMasterdataLatestDBPath(targetDir, center)),
+            fileManager.removeFile(SQLitePathUtils.getMasterdataLatestDBPath(targetDir, database));
+            Files.createSymbolicLink(Paths.get(SQLitePathUtils.getMasterdataLatestDBPath(targetDir, database)),
                     Paths.get(sqliteDBMetadata.getCurrent().getFile()));
         } catch (Exception x) {
             LOG.error("Error deleting or updating last db sym link.", x);
         }
     }
 
-    private void deletePatches(String center) {
+    private void deletePatches(String database) {
         try {
-            File folder = new File(SQLitePathUtils.getMasterdataDBFolderPath(sqliteConfig.getDatabasePath(), center));
+            File folder = new File(SQLitePathUtils.getMasterdataDBFolderPath(sqliteConfig.getDatabasePath(), database));
             File fList[] = folder.listFiles();
             for (int i = 0; i < fList.length; i++) {
                 File pes = fList[i];
@@ -176,11 +176,11 @@ public class SQLiteDBPersistManagerImpl implements SQLiteDBPersistManager {
                 }
             }
         } catch (Exception e) {
-            LOG.error("Error deleting patches for center {}", center, e);
+            LOG.error("Error deleting patches for center {}", database, e);
         }
     }
 
-    private void createPatches(SQLiteDBMetadata sqliteDBMetadata, String center) {
+    private void createPatches(SQLiteDBMetadata sqliteDBMetadata, String database) {
 
         int patchCount = 0;
         while (patchCount < sqliteConfig.getMaxPatchNumber() && patchCount < sqliteDBMetadata.getPrevious().size()) {
@@ -188,9 +188,9 @@ public class SQLiteDBPersistManagerImpl implements SQLiteDBPersistManager {
             File prev = new File(sqliteDBMetadata.getPrevious().get(patchCount).getFile());
             File current = new File(sqliteDBMetadata.getCurrent().getFile());
             try {
-                createPatch(prev, current, sqliteDBMetadata.getPrevious().get(patchCount).getMd5(), center);
+                createPatch(prev, current, sqliteDBMetadata.getPrevious().get(patchCount).getMd5(), database);
             } catch (Exception e) {
-                LOG.error("Error generatin patch {} for center {}", patchCount, center, e);
+                LOG.error("Error generatin patch {} for center {}", patchCount, database, e);
             }
             patchCount++;
         }
@@ -198,7 +198,7 @@ public class SQLiteDBPersistManagerImpl implements SQLiteDBPersistManager {
     }
 
     @Override
-    public void createPatchForMD5(SQLiteDBMetadata sqliteDBMetadata, String center, String md5) {
+    public void createPatchForMD5(SQLiteDBMetadata sqliteDBMetadata, String database, String md5) {
 
         if (md5 == null) {
             return;
@@ -214,15 +214,15 @@ public class SQLiteDBPersistManagerImpl implements SQLiteDBPersistManager {
             File previous = new File(fileInfo.getFile());
             File current = new File(sqliteDBMetadata.getCurrent().getFile());
             try {
-                createPatch(previous, current, fileInfo.getMd5(), center);
+                createPatch(previous, current, fileInfo.getMd5(), database);
             } catch (Exception e) {
-                LOG.error("Error generatin patch {} for center {}", md5, center, e);
+                LOG.error("Error generatin patch {} for center {}", md5, database, e);
             }
         }
     }
 
     @Override
-    public boolean existsDBForMD5(SQLiteDBMetadata sqliteDBMetadata, String center, String md5) {
+    public boolean existsDBForMD5(SQLiteDBMetadata sqliteDBMetadata, String database, String md5) {
 
         if (md5 == null) {
             return false;
@@ -237,7 +237,7 @@ public class SQLiteDBPersistManagerImpl implements SQLiteDBPersistManager {
         return fileInfo != null;
     }
 
-    private void createPatch(File previous, File current, String md5, String center) throws Exception {
+    private void createPatch(File previous, File current, String md5, String database) throws Exception {
 
         FileOutputStream out = null;
         OutputStream vcDiffOut = null;
@@ -248,7 +248,7 @@ public class SQLiteDBPersistManagerImpl implements SQLiteDBPersistManager {
             byte[] dictionary = IOUtils.toByteArray(is);
 
             File outFile =
-                    new File(SQLitePathUtils.getMasterdataPatchPath(sqliteConfig.getDatabasePath(), center, md5));
+                    new File(SQLitePathUtils.getMasterdataPatchPath(sqliteConfig.getDatabasePath(), database, md5));
             outFile.createNewFile();
             out = new FileOutputStream(outFile);
 
