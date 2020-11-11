@@ -78,12 +78,23 @@ public class SQLitePathUtils {
     }
 
     public static File createMasterdataLock(URI tempDir, String database) {
+    	File centerLock = new File(getPath(tempDir, database.toLowerCase(), LOCK_EXTENSION));
         try {
-            File centerLock = new File(getPath(tempDir, database.toLowerCase(), LOCK_EXTENSION));
             FileUtils.touch(centerLock);
             return centerLock;
         } catch (IOException e) {
-            LOG.error("Error creating lock for database {}", database, e);
+        	LOG.error("Error creating lock for database {} using touch ", database);
+        	if(!centerLock.exists()) {
+        		try {
+					if(centerLock.createNewFile()) {
+						return centerLock;
+					}
+				} catch (IOException e1) {
+					LOG.error("Error creating lock for database {}", database, e);
+				}
+        	} else {
+        		return centerLock;
+        	}
             return null;
         }
     }
