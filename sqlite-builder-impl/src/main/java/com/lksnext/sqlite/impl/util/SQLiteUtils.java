@@ -58,7 +58,7 @@ public class SQLiteUtils {
 				IOUtils.copy(input, output);
 			}
 		} catch (Exception e) {
-			LOG.error("Error manipulating DB file {}", toDBName);
+			LOG.error("Error manipulating DB file {}", toDBName, e);
 		}
 		Connection conn = DriverManager.getConnection(url);
 		LOG.debug("New database created {}", toDBName);

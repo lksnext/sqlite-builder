@@ -83,7 +83,7 @@ public class SQLitePathUtils {
             FileUtils.touch(centerLock);
             return centerLock;
         } catch (IOException e) {
-            LOG.error("Error creating lock for database {}", database);
+            LOG.error("Error creating lock for database {}", database, e);
             return null;
         }
     }
@@ -93,7 +93,7 @@ public class SQLitePathUtils {
             File centerLock = new File(getPath(tempDir, database.toLowerCase(), LOCK_EXTENSION));
             centerLock.delete();
         } catch (Exception e) {
-            LOG.error("Error releasing lock for database {}", database);
+            LOG.error("Error releasing lock for database {}", database, e);
         }
     }
 
@@ -101,7 +101,7 @@ public class SQLitePathUtils {
         try {
             lock.delete();
         } catch (Exception e) {
-            LOG.error("Error releasing lock for database");
+            LOG.error("Error releasing lock for database", e);
         }
     }
 }
