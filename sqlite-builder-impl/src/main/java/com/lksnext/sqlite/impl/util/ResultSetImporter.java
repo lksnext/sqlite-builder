@@ -23,7 +23,7 @@ import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 
 public class ResultSetImporter {
-
+	
     private static final String SQLITE_PK_COLUMN = "id";
     private static final String WITHOUT_ROWID_SQL = "WITHOUT ROWID";
     

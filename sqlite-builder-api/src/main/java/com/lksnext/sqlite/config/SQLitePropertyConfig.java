@@ -4,11 +4,13 @@ import java.net.URI;
 
 public interface SQLitePropertyConfig {
 
-    public URI getDatabasePath();
+    URI getDatabasePath();
 
-    public URI getTemporalPath();
+    URI getTemporalPath();
 
-    public int getMaxDBCopyNumber();
+    int getMaxDBCopyNumber();
 
-    public int getMaxPatchNumber();
+    int getMaxPatchNumber();
+
+	String getMoveEnabled();
 }

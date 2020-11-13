@@ -59,6 +59,7 @@ public class SQLiteDBConfigurableGeneratorImpl implements SQLiteDBConfigurableGe
 
 	@Override
 	public synchronized void createDatabases(String definition, List<Map<String, String>> contexts) {
+		LOG.info("START creating databases {} - {}", definition, contexts);
 		StopWatch timing = new StopWatch("SQLite database generation");
 		AtomicInteger atomicInteger = new AtomicInteger(0);
 		int totalDbs = contexts.size();
@@ -84,6 +85,7 @@ public class SQLiteDBConfigurableGeneratorImpl implements SQLiteDBConfigurableGe
 		DatabaseDefinition database = getDatabaseDefinition(definition);
 
 		String dbName = StrSubstitutor.replace(database.getDatabase(), context);
+		LOG.info("buildDatabase {} ", dbName);
 
 		if (availableDatabases.contains(dbName)) {
 			LOG.info("Database {} is already built", dbName);
@@ -99,7 +101,8 @@ public class SQLiteDBConfigurableGeneratorImpl implements SQLiteDBConfigurableGe
 		String extendsFrom = database.getExtends();
 		String extendedDb = null;
 		if (StringUtils.isNotEmpty(extendsFrom)) {
-			 extendedDb = buildDatabase(extendsFrom, context, availableDatabases);
+			LOG.info("Database {} extends from {}", database, extendsFrom);
+			extendedDb = buildDatabase(extendsFrom, context, availableDatabases);
 		}
 
 		try (Connection sqliteCon = createNewDatabase(extendedDb, database, context)) {
@@ -158,6 +161,7 @@ public class SQLiteDBConfigurableGeneratorImpl implements SQLiteDBConfigurableGe
 	private void populateTableData(Connection sqliteCon, SchemaElement table, Map<String, String> context)
 			throws SQLException {
 		String query = table.getSource();
+		LOG.info("populateTableData query: " + query);
 		String cleanup = table.getCleanup();
 		if (StringUtils.isNotEmpty(query)) {
 			if (context != null) {
@@ -190,5 +194,4 @@ public class SQLiteDBConfigurableGeneratorImpl implements SQLiteDBConfigurableGe
 	private boolean isDBLocked(String dbFilename) {
 		return SQLitePathUtils.isMasterdataLocked(sqliteConfig.getDatabasePath(), dbFilename);
 	}
-
 }

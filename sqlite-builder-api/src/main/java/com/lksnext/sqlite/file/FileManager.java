@@ -31,10 +31,8 @@ public interface FileManager {
 
     void createFolder(String destPath) throws URISyntaxException;
 
-    void moveFile(URI source, URI target) throws IOException;
+    void moveFile(URI source, URI target, boolean move) throws IOException;
 
     void touch(URI file) throws IOException;
-
-    void copyFile(URI source, URI target) throws IOException;
 
 }

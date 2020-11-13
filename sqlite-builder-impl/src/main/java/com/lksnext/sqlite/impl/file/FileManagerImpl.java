@@ -71,15 +71,20 @@ public class FileManagerImpl implements FileManager {
     }
 
     @Override
-    public void moveFile(URI source, URI target) throws IOException {
+    public void moveFile(URI source, URI target, boolean moveEnabled) throws IOException {
         Files.createDirectories(Paths.get(target).getParent());
-        Files.move(Paths.get(source), Paths.get(target), StandardCopyOption.REPLACE_EXISTING);
+        if(moveEnabled) {
+        	Files.move(Paths.get(source), Paths.get(target), StandardCopyOption.REPLACE_EXISTING);
+        } else {
+        	Files.copy(Paths.get(source), Paths.get(target), StandardCopyOption.REPLACE_EXISTING);
+        	removeFile(source);
+        }
     }
 
-    @Override
+    /*@Override
     public void copyFile(URI source, URI target) throws IOException {
         Files.copy(Paths.get(source), Paths.get(target), StandardCopyOption.REPLACE_EXISTING);
-    }
+    }*/
 
     @Override
     public void saveFile(byte[] content, String filePath) throws IOException, URISyntaxException {

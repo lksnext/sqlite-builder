@@ -27,6 +27,8 @@ public class SQLiteConfigImpl implements SQLitePropertyConfig {
     private int maxDBCopyNumber;
 
     private int maxPatchNumber;
+    
+    private String moveEnabled;
 
     public void setDatabasePath(String path) {
         this.databasePath = path;
@@ -80,5 +82,12 @@ public class SQLiteConfigImpl implements SQLitePropertyConfig {
         this.maxPatchNumber = maxPatchNumber;
     }
 
-    
+    @Override
+	public String getMoveEnabled() {
+		return moveEnabled;
+	}
+
+	public void setMoveEnabled(String moveEnabled) {
+		this.moveEnabled = moveEnabled;
+	}
 }

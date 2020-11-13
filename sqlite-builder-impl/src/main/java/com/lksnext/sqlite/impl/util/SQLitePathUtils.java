@@ -84,9 +84,11 @@ public class SQLitePathUtils {
             return centerLock;
         } catch (IOException e) {
         	LOG.error("Error creating lock for database {} using touch ", database);
+        	LOG.error("centerLock exists: {} ", centerLock.exists());
         	if(!centerLock.exists()) {
         		try {
 					if(centerLock.createNewFile()) {
+						LOG.error("centerLock created");
 						return centerLock;
 					}
 				} catch (IOException e1) {

@@ -22,12 +22,12 @@ public class DatabaseUtil {
 
 	public static GenericTable executeQuery(DSLContext create, DataSource ds, String query, String tableName)
 			throws SQLException {
-
+		
 		Connection con = DataSourceUtils.getConnection(ds);
 		try (Statement stmt = con.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 				ResultSet rs = stmt.executeQuery(query);) {
 			rs.setFetchSize(10000);
-
+			
 			return ResultSetImporter.convertResultSetSQLite(create, rs, tableName);
 
 		} finally {
