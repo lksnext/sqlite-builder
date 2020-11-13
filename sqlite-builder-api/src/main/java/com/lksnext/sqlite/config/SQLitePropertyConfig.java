@@ -12,5 +12,7 @@ public interface SQLitePropertyConfig {
 
     int getMaxPatchNumber();
 
-	String getMoveEnabled();
+	boolean isMoveDisabled();
+	
+	boolean isSymLinkDisabled();
 }

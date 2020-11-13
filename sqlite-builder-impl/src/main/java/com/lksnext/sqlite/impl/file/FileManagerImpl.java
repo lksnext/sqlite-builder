@@ -24,9 +24,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
+import com.lksnext.sqlite.config.SQLitePropertyConfig;
 import com.lksnext.sqlite.file.FileManager;
 
 
@@ -35,6 +37,8 @@ public class FileManagerImpl implements FileManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(FileManagerImpl.class);
 
+    @Autowired
+    private SQLitePropertyConfig sqliteConfig;
 
     @Override
     public byte[] getFileContent(String filePath) throws IOException, URISyntaxException {
@@ -71,20 +75,15 @@ public class FileManagerImpl implements FileManager {
     }
 
     @Override
-    public void moveFile(URI source, URI target, boolean moveEnabled) throws IOException {
+    public void moveFile(URI source, URI target) throws IOException {
         Files.createDirectories(Paths.get(target).getParent());
-        if(moveEnabled) {
-        	Files.move(Paths.get(source), Paths.get(target), StandardCopyOption.REPLACE_EXISTING);
-        } else {
+        if(sqliteConfig.isMoveDisabled()) {
         	Files.copy(Paths.get(source), Paths.get(target), StandardCopyOption.REPLACE_EXISTING);
         	removeFile(source);
+        } else {
+        	Files.move(Paths.get(source), Paths.get(target), StandardCopyOption.REPLACE_EXISTING);
         }
     }
-
-    /*@Override
-    public void copyFile(URI source, URI target) throws IOException {
-        Files.copy(Paths.get(source), Paths.get(target), StandardCopyOption.REPLACE_EXISTING);
-    }*/
 
     @Override
     public void saveFile(byte[] content, String filePath) throws IOException, URISyntaxException {

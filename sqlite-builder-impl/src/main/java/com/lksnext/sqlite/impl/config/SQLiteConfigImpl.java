@@ -28,7 +28,9 @@ public class SQLiteConfigImpl implements SQLitePropertyConfig {
 
     private int maxPatchNumber;
     
-    private String moveEnabled;
+    private boolean moveDisabled;
+
+    private boolean symLinkDisabled;
 
     public void setDatabasePath(String path) {
         this.databasePath = path;
@@ -83,11 +85,20 @@ public class SQLiteConfigImpl implements SQLitePropertyConfig {
     }
 
     @Override
-	public String getMoveEnabled() {
-		return moveEnabled;
+	public boolean isMoveDisabled() {
+		return moveDisabled;
 	}
 
-	public void setMoveEnabled(String moveEnabled) {
-		this.moveEnabled = moveEnabled;
+    public void setMoveDisabled(boolean moveDisabled) {
+		this.moveDisabled = moveDisabled;
+	}
+
+	@Override
+	public boolean isSymLinkDisabled() {
+		return symLinkDisabled;
+	}
+	
+	public void setSymLinkDisabled(boolean symLinkDisabled) {
+		this.symLinkDisabled = symLinkDisabled;
 	}
 }

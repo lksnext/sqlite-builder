@@ -61,14 +61,14 @@ public class SQLiteDBPersistManagerImpl implements SQLiteDBPersistManager {
             LOG.info("New database generated {} {} {}", owner, database, newMD5);
             URI srcURI = SQLitePathUtils.getTemporalDBPath(sqliteConfig.getTemporalPath(), database);
             URI destURI = SQLitePathUtils.getMasterdataDBPath(sqliteConfig.getDatabasePath(), database, newMD5);
-            boolean move = Boolean.TRUE.toString().contentEquals(sqliteConfig.getMoveEnabled());
-            fileManager.moveFile(srcURI, destURI, move);
+            fileManager.moveFile(srcURI, destURI);
 
             List<SQLiteDBFileInfo> dbsToDelete = sqliteDBMetadataManager.addDBtoMetadata(metadata, owner, database,
                     Paths.get(destURI).toString(), newMD5);
             
-            updateOrCreateSymLinkToLatest(metadata, sqliteConfig.getDatabasePath(), database);
-
+            if(!sqliteConfig.isSymLinkDisabled()) {
+            	updateOrCreateSymLinkToLatest(metadata, sqliteConfig.getDatabasePath(), database);
+            }
 
             if (dbsToDelete != null) {
                 for (SQLiteDBFileInfo db : dbsToDelete) {
