@@ -14,7 +14,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +32,8 @@ import com.lksnext.sqlite.metadata.SQLiteDBMetadataManager;
 
 @Service
 public class SQLiteDBMetadataManagerImpl implements SQLiteDBMetadataManager {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(SQLiteDBMetadataManagerImpl.class);
 
 	@Autowired
 	private FileManager fileManager;
@@ -66,12 +69,15 @@ public class SQLiteDBMetadataManagerImpl implements SQLiteDBMetadataManager {
 	@Override
 	public void saveMetadata(SQLiteDBMetadata sqliteDBMetadata, String database)
 			throws URISyntaxException, IOException {
+		long metadataTime = System.currentTimeMillis();
 		URI dbsBaseDir = sqliteConfig.getDatabasePath();
 		URI metadataPath = SQLitePathUtils.getMasterdataMetadataPath(dbsBaseDir, database);
 		try (Writer writer = new FileWriter(new File(metadataPath))) {
 			Gson gson = new GsonBuilder().create();
 			gson.toJson(sqliteDBMetadata, writer);
 		}
+		metadataTime = System.currentTimeMillis() - metadataTime;
+        LOG.info("Metadata updated for Database {} in {} ms", database, metadataTime);
 	}
 
 	@Override

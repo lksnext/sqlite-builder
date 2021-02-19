@@ -173,18 +173,26 @@ public class SQLiteDBPersistManagerImpl implements SQLiteDBPersistManager {
     }
 
     private void deletePatches(String database) {
+    	LOG.info("Deleting all patches for database {}", database);
+    	long deletePatchesTime = System.currentTimeMillis();
         try {
             File folder = new File(SQLitePathUtils.getMasterdataDBFolderPath(sqliteConfig.getDatabasePath(), database));
             File fList[] = folder.listFiles();
+            long patchTime = 0;
             for (int i = 0; i < fList.length; i++) {
                 File pes = fList[i];
                 if (pes.getName().endsWith(".patch")) {
+                	patchTime = System.currentTimeMillis();
                     pes.delete();
+                    patchTime = System.currentTimeMillis() - patchTime;
+                    LOG.info("Patch {} deleted for database {} in {} ms", pes.getName(), database, patchTime);
                 }
             }
         } catch (Exception e) {
             LOG.error("Error deleting patches for center {}", database, e);
         }
+        deletePatchesTime = System.currentTimeMillis() - deletePatchesTime;
+        LOG.info("All patches deleted for database {} in {} ms", database, deletePatchesTime);
     }
 
     private void createPatches(SQLiteDBMetadata sqliteDBMetadata, String database) {
