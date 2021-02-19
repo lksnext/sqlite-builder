@@ -61,7 +61,11 @@ public class SQLiteDBPersistManagerImpl implements SQLiteDBPersistManager {
             LOG.info("New database generated {} {} {}", owner, database, newMD5);
             URI srcURI = SQLitePathUtils.getTemporalDBPath(sqliteConfig.getTemporalPath(), database);
             URI destURI = SQLitePathUtils.getMasterdataDBPath(sqliteConfig.getDatabasePath(), database, newMD5);
+            
+            long fileWriteTime = System.currentTimeMillis();
             fileManager.moveFile(srcURI, destURI);
+            fileWriteTime = System.currentTimeMillis() - fileWriteTime;
+            LOG.info("Database {} file written in {} ms", database, fileWriteTime);
 
             List<SQLiteDBFileInfo> dbsToDelete = sqliteDBMetadataManager.addDBtoMetadata(metadata, owner, database,
                     Paths.get(destURI).toString(), newMD5);
@@ -191,9 +195,13 @@ public class SQLiteDBPersistManagerImpl implements SQLiteDBPersistManager {
             File prev = new File(sqliteDBMetadata.getPrevious().get(patchCount).getFile());
             File current = new File(sqliteDBMetadata.getCurrent().getFile());
             try {
+            	long patchCreationTime = System.currentTimeMillis();
                 createPatch(prev, current, sqliteDBMetadata.getPrevious().get(patchCount).getMd5(), database);
+                patchCreationTime = System.currentTimeMillis() - patchCreationTime;
+				LOG.info("Patch {} for database {} created in {} ms",
+						sqliteDBMetadata.getPrevious().get(patchCount).getMd5(), database, patchCreationTime);
             } catch (Exception e) {
-                LOG.error("Error generatin patch {} for center {}", patchCount, database, e);
+                LOG.error("Error generating patch {} for center {}", patchCount, database, e);
             }
             patchCount++;
         }
@@ -219,7 +227,7 @@ public class SQLiteDBPersistManagerImpl implements SQLiteDBPersistManager {
             try {
                 createPatch(previous, current, fileInfo.getMd5(), database);
             } catch (Exception e) {
-                LOG.error("Error generatin patch {} for center {}", md5, database, e);
+                LOG.error("Error generating patch {} for center {}", md5, database, e);
             }
         }
     }

@@ -101,10 +101,11 @@ public class SQLiteDBConfigurableGeneratorImpl implements SQLiteDBConfigurableGe
 		String extendsFrom = database.getExtends();
 		String extendedDb = null;
 		if (StringUtils.isNotEmpty(extendsFrom)) {
-			LOG.info("Database {} extends from {}", database, extendsFrom);
+			LOG.info("Database {} extends from {}", database.getDatabase(), extendsFrom);
 			extendedDb = buildDatabase(extendsFrom, context, availableDatabases);
 		}
 
+		long dbCreationTime = System.currentTimeMillis();
 		try (Connection sqliteCon = createNewDatabase(extendedDb, database, context)) {
 			createLockForDB(dbName);
 
@@ -115,6 +116,8 @@ public class SQLiteDBConfigurableGeneratorImpl implements SQLiteDBConfigurableGe
 			SQLiteUtils.vacuum(sqliteCon);
 			sqliteCon.close();
 			availableDatabases.add(dbName);
+			dbCreationTime = System.currentTimeMillis() - dbCreationTime;
+			LOG.info("Database {} created in {} ms", database.getDatabase(), dbCreationTime);
 			if (FINAL.equalsIgnoreCase(database.getType())) {
 				sqliteDBPersistManager.persist(dbName, dbName);
 			}
@@ -161,7 +164,7 @@ public class SQLiteDBConfigurableGeneratorImpl implements SQLiteDBConfigurableGe
 	private void populateTableData(Connection sqliteCon, SchemaElement table, Map<String, String> context)
 			throws SQLException {
 		String query = table.getSource();
-		LOG.info("populateTableData query: " + query);
+		LOG.debug("populateTableData query: " + query);
 		String cleanup = table.getCleanup();
 		if (StringUtils.isNotEmpty(query)) {
 			if (context != null) {
@@ -172,7 +175,7 @@ public class SQLiteDBConfigurableGeneratorImpl implements SQLiteDBConfigurableGe
 		}
 
 		if (StringUtils.isNotEmpty(cleanup)) {
-			LOG.info("Cleaning table {}...", table.getTable());
+			LOG.debug("Cleaning table {}...", table.getTable());
 
 			if (context != null) {
 				SQLiteUtils.cleanupAction(sqliteCon, cleanup, context);
