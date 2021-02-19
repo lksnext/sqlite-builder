@@ -131,9 +131,6 @@ public class FileManagerImpl implements FileManager {
                 if (Files.isSymbolicLink(path)) {
                     Files.delete(path);
                 } else {
-                    fileChannel = FileChannel.open(path, StandardOpenOption.WRITE, StandardOpenOption.DELETE_ON_CLOSE);
-                    fileChannel.lock();
-                    fileChannel.close();
                     // Force delete
                     Files.deleteIfExists(path);
                 }
