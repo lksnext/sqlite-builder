@@ -1,12 +1,12 @@
 package com.lksnext.sqlite.impl.metadata;
 
-import java.io.File;
+import java.io.BufferedWriter;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -69,10 +69,11 @@ public class SQLiteDBMetadataManagerImpl implements SQLiteDBMetadataManager {
 	@Override
 	public void saveMetadata(SQLiteDBMetadata sqliteDBMetadata, String database)
 			throws URISyntaxException, IOException {
+		LOG.info("Start updating Metadata for Database {}", database);
 		long metadataTime = System.currentTimeMillis();
 		URI dbsBaseDir = sqliteConfig.getDatabasePath();
 		URI metadataPath = SQLitePathUtils.getMasterdataMetadataPath(dbsBaseDir, database);
-		try (Writer writer = new FileWriter(new File(metadataPath))) {
+		try(BufferedWriter writer = Files.newBufferedWriter(Paths.get(metadataPath))) {
 			Gson gson = new GsonBuilder().create();
 			gson.toJson(sqliteDBMetadata, writer);
 		}

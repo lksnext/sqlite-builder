@@ -67,16 +67,28 @@ public class SQLiteDBPersistManagerImpl implements SQLiteDBPersistManager {
             fileWriteTime = System.currentTimeMillis() - fileWriteTime;
             LOG.info("Database {} file written in {} ms", database, fileWriteTime);
 
+            LOG.info("Start addDBtoMetadata for Database {}", database);
+            long addDbToMetadataTime = System.currentTimeMillis();
             List<SQLiteDBFileInfo> dbsToDelete = sqliteDBMetadataManager.addDBtoMetadata(metadata, owner, database,
                     Paths.get(destURI).toString(), newMD5);
+            addDbToMetadataTime = System.currentTimeMillis() - addDbToMetadataTime;
+            LOG.info("addDBtoMetadata for Database {} finished in {} ms", database, addDbToMetadataTime);
             
             if(!sqliteConfig.isSymLinkDisabled()) {
+            	LOG.info("Start creatingSymLink for Database {}", database);
+                long symLinkTime = System.currentTimeMillis();
             	updateOrCreateSymLinkToLatest(metadata, sqliteConfig.getDatabasePath(), database);
+            	symLinkTime = System.currentTimeMillis() - symLinkTime;
+                LOG.info("SymLink created for Database {} in {} ms", database, symLinkTime);
             }
 
             if (dbsToDelete != null) {
                 for (SQLiteDBFileInfo db : dbsToDelete) {
+                	LOG.info("Start removing file {}", db.getFile());
+                    long removeTime = System.currentTimeMillis();
                     fileManager.removeFile(Paths.get(db.getFile()).toUri());
+                    removeTime = System.currentTimeMillis() - removeTime;
+                    LOG.info("File {} removed in {} ms", database, removeTime);
                 }
             }
             sqliteDBMetadataManager.saveMetadata(metadata, database);
