@@ -321,7 +321,7 @@ public class SQLiteDBPersistManagerImpl implements SQLiteDBPersistManager {
 				ZipOutputStream zipOut = new ZipOutputStream(fos);
 				FileInputStream fis = new FileInputStream(fileToZip);){
 			
-			ZipEntry zipEntry = new ZipEntry(fileToZip.getName());
+			ZipEntry zipEntry = new ZipEntry(SQLitePathUtils.LATEST_DB_NAME);
 			zipOut.putNextEntry(zipEntry);
 			byte[] bytes = new byte[1024];
 			int length;

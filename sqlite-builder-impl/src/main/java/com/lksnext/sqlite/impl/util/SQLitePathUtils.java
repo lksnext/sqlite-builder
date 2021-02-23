@@ -20,7 +20,7 @@ public class SQLitePathUtils {
     private static String PATCH_EXTENSION = ".patch";
     private static String METADATA_FILE_NAME = "metadata.json";
     private static String HYPHEN = "-";
-    private static String LATEST_DB_NAME = "latest.db";
+    public static String LATEST_DB_NAME = "latest.db";
     private static String LATEST_ZIPPED_DB_NAME = "latest.zip";
 
     public static final URI getTemporalDBPath(URI tempDir, String fileName) {
