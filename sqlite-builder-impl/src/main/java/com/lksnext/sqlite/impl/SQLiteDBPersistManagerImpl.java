@@ -12,6 +12,8 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -92,6 +94,8 @@ public class SQLiteDBPersistManagerImpl implements SQLiteDBPersistManager {
                 }
             }
             sqliteDBMetadataManager.saveMetadata(metadata, database);
+            
+            saveZippedLatestDb(database, destURI);
 
             deletePatches(database);
 
@@ -102,7 +106,7 @@ public class SQLiteDBPersistManagerImpl implements SQLiteDBPersistManager {
         purgeOrphanedDatabaseFiles(metadata, database);
     }
 
-    @Override
+	@Override
     public void fixSymbolicLinks(String database) throws IOException {
         SQLiteDBMetadata metadata = null;
         try {
@@ -305,4 +309,37 @@ public class SQLiteDBPersistManagerImpl implements SQLiteDBPersistManager {
             }
         }
     }
+    
+    private void saveZippedLatestDb(String database, URI file) {
+		deleteLatestZippedDb(database);// sqliteConfig.getDatabasePath()
+		
+		URI folderURI = SQLitePathUtils.getMasterdataDBFolderPath(sqliteConfig.getDatabasePath(), database);
+		URI zip = SQLitePathUtils.getMasterdataLatestZipPath(folderURI);
+		File fileToZip = Paths.get(file).toFile();
+		
+		try (FileOutputStream fos = new FileOutputStream(Paths.get(zip).toFile());
+				ZipOutputStream zipOut = new ZipOutputStream(fos);
+				FileInputStream fis = new FileInputStream(fileToZip);){
+			
+			ZipEntry zipEntry = new ZipEntry(fileToZip.getName());
+			zipOut.putNextEntry(zipEntry);
+			byte[] bytes = new byte[1024];
+			int length;
+			while ((length = fis.read(bytes)) >= 0) {
+				zipOut.write(bytes, 0, length);
+			}
+		}catch (Exception e) {
+			LOG.error("Error creting latest.zip for database {}", e);
+		}
+	}
+
+	private void deleteLatestZippedDb(String database) {
+		try {
+			URI folderURI = SQLitePathUtils.getMasterdataDBFolderPath(sqliteConfig.getDatabasePath(), database);
+			URI zip = SQLitePathUtils.getMasterdataLatestZipPath(folderURI);
+			fileManager.removeFile(zip);
+		} catch (Exception e) {
+			LOG.error("Error deleting latest.zip for database {}", e);
+		}
+	}
 }

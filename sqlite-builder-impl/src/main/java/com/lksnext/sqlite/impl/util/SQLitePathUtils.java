@@ -21,6 +21,7 @@ public class SQLitePathUtils {
     private static String METADATA_FILE_NAME = "metadata.json";
     private static String HYPHEN = "-";
     private static String LATEST_DB_NAME = "latest.db";
+    private static String LATEST_ZIPPED_DB_NAME = "latest.zip";
 
     public static final URI getTemporalDBPath(URI tempDir, String fileName) {
         return getPath(tempDir, fileName, DB_EXTENSION);
@@ -46,6 +47,11 @@ public class SQLitePathUtils {
 
     public static final URI getMasterdataMD5Path(URI baseUri, String fileName) {
         return getPath(baseUri, fileName, MD5_EXTENSION);
+    }
+    
+    public static final URI getMasterdataLatestZipPath(URI baseURI) {
+    	Path basePath = Paths.get(baseURI);
+        return Paths.get(basePath.toString(), LATEST_ZIPPED_DB_NAME).toUri();
     }
 
     public static final String getDBURL(URI tempDir, String fileName) {
