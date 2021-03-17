@@ -5,11 +5,15 @@ import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.table;
 
+import java.lang.reflect.Field;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.jooq.CreateTableColumnStep;
 import org.jooq.DDLQuery;
@@ -25,6 +29,7 @@ import org.jooq.impl.SQLDataType;
 public class ResultSetImporter {
 	
     private static final String SQLITE_PK_COLUMN = "id";
+    private static final String COLUMN_NAME_REGEX = "^(\\w+)(?:\\#(\\w+)\\#)?$";
     private static final String WITHOUT_ROWID_SQL = "WITHOUT ROWID";
     
     @SuppressWarnings("resource")
@@ -42,12 +47,16 @@ public class ResultSetImporter {
             InsertSetStep<Record> insertOperation = create.insertInto(table(name(tableName)));
             InsertSetMoreStep<Record> lastStep = null;
 
+            ResultSetMetaData rsmd = resultSet.getMetaData();
             int total_columns = resultSet.getMetaData().getColumnCount();
             String allColumns[] = new String[total_columns];
             for (int i = 0; i < total_columns; i++) {
                 Object value = null;
-
-                String columnName = resultSet.getMetaData().getColumnLabel(i + 1).toLowerCase();
+                
+                String rawColumnName = rsmd.getColumnLabel(i + 1).toLowerCase();
+                String columnName = rawColumnName;
+                String forcedTypeName = null;
+                Integer forcedType = null;
 
                 if (columnName.equals("_id") || columnName.equals(SQLITE_PK_COLUMN)) {
                     columnName = SQLITE_PK_COLUMN;
@@ -55,6 +64,16 @@ public class ResultSetImporter {
                     if (first) {
                         createTableQuery =
                                 ((CreateTableColumnStep) createTableQuery).column(SQLITE_PK_COLUMN, SQLDataType.CLOB);
+                    }
+                } else {
+                    Pattern pattern = Pattern.compile(COLUMN_NAME_REGEX);
+                    Matcher matcher = pattern.matcher(rawColumnName);
+                    if (matcher.matches()) {
+                    	columnName = matcher.group(1);
+                        forcedTypeName = matcher.group(2);
+                        if (forcedTypeName != null) {
+                            forcedType = translateForcedType(forcedTypeName);
+                        }
                     }
                 }
 
@@ -67,7 +86,9 @@ public class ResultSetImporter {
                 columDataType = SQLDataType.CLOB;
 
                 int sqlType = resultSet.getMetaData().getColumnType(i + 1);
-
+                if (forcedType != null) {
+                    sqlType = forcedType.intValue();
+                }
                 switch (sqlType) {
                     case (Types.BIT):
                         columDataType = SQLDataType.BOOLEAN;
@@ -105,7 +126,10 @@ public class ResultSetImporter {
                     case (Types.DATE):
                         value = resultSet.getDate(i + 1);
                         if (value != null) {
-                            if (new SimpleDateFormat("HH:mm:ss").format((Date) value).equals("00:00:00")) {
+                        	if(forcedType != null && forcedType.intValue() == sqlType) {
+								columDataType = forcedType.equals(Types.TIMESTAMP) ? SQLDataType.TIMESTAMP
+										: SQLDataType.DATE;
+                        	} else  if (new SimpleDateFormat("HH:mm:ss").format((Date) value).equals("00:00:00")) {
                                 columDataType = SQLDataType.DATE;
                             } else {
                                 columDataType = SQLDataType.TIMESTAMP;
@@ -156,4 +180,14 @@ public class ResultSetImporter {
         return tableDefinition;
     }
 
+    private static Integer translateForcedType(String typeName) {
+        Class<Types> typesClass = Types.class;
+        try {
+            Field field = typesClass.getField(typeName.toUpperCase());
+            return field.getInt(null);
+        } catch (Exception e) {
+            return null;
+        }
+
+    }
 }
