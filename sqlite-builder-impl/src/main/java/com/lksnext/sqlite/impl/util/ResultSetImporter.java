@@ -137,6 +137,10 @@ public class ResultSetImporter {
                         } else {
                             columDataType = SQLDataType.TIMESTAMP;
                         }
+                        
+                        if (SQLDataType.TIMESTAMP.equals(columDataType)) {
+                        	value = resultSet.getTimestamp(i + 1);
+                        }
 
                         break;
 
