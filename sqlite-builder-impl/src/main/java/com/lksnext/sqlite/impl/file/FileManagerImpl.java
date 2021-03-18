@@ -5,9 +5,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.OpenOption;
@@ -31,7 +28,6 @@ import org.springframework.util.DigestUtils;
 import com.lksnext.sqlite.config.SQLitePropertyConfig;
 import com.lksnext.sqlite.file.FileManager;
 
-
 @Service
 public class FileManagerImpl implements FileManager {
 
@@ -50,25 +46,12 @@ public class FileManagerImpl implements FileManager {
     public byte[] getFileContent(URI uri) throws IOException {
         LOG.debug("Reading file from uri {}", uri.getPath());
         byte[] content = null;
-        FileChannel fileChannel = null;
 
-        try {
-            Path path = Paths.get(uri);
-            if (Files.exists(path)) {
-                fileChannel = FileChannel.open(path, StandardOpenOption.READ);
-                // Acquire the lock
-                fileChannel.lock(0L, Long.MAX_VALUE, true);
-
-                content = Files.readAllBytes(path);
-            } else {
-                return null;
-            }
-
-        } finally {
-
-            if (fileChannel != null) {
-                fileChannel.close();
-            }
+        Path path = Paths.get(uri);
+        if (Files.exists(path)) {
+            content = Files.readAllBytes(path);
+        } else {
+            return null;
         }
 
         return content;
@@ -94,52 +77,26 @@ public class FileManagerImpl implements FileManager {
     @Override
     public void saveFile(byte[] content, URI uri) throws IOException {
         LOG.debug("Saving file into uri {}", uri.getPath());
-        FileChannel fileChannel = null;
 
-        try {
+        Path path = Paths.get(uri);
+        Files.createDirectories(path.getParent());
 
-            Path path = Paths.get(uri);
-            Files.createDirectories(path.getParent());
+        OpenOption rewriteOption =
+                Files.exists(path) ? StandardOpenOption.TRUNCATE_EXISTING : StandardOpenOption.CREATE;
 
-            OpenOption rewriteOption =
-                    Files.exists(path) ? StandardOpenOption.TRUNCATE_EXISTING : StandardOpenOption.CREATE;
-
-            fileChannel = FileChannel.open(path, StandardOpenOption.WRITE, rewriteOption);
-            FileLock lock = fileChannel.lock();
-            ByteBuffer buffer = ByteBuffer.wrap(content);
-            fileChannel.write(buffer);
-
-            lock.release();
-
-        } finally {
-
-            if (fileChannel != null) {
-                fileChannel.close();
-            }
-
-        }
+        Files.write(path, content, rewriteOption);
     }
 
     @Override
     public void removeFile(URI uri) throws IOException {
         LOG.debug("Removing file from uri {}", uri.getPath());
-        FileChannel fileChannel = null;
-        try {
-
-            Path path = Paths.get(uri);
-            if (Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
-                if (Files.isSymbolicLink(path)) {
-                    Files.delete(path);
-                } else {
-                    // Force delete
-                    Files.deleteIfExists(path);
-                }
-            }
-
-        } finally {
-
-            if (fileChannel != null) {
-                fileChannel.close();
+        Path path = Paths.get(uri);
+        if (Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
+            if (Files.isSymbolicLink(path)) {
+                Files.delete(path);
+            } else {
+                // Force delete
+                Files.deleteIfExists(path);
             }
         }
     }
