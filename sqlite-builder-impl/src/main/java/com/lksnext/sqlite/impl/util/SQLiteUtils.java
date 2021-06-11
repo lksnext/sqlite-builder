@@ -106,7 +106,8 @@ public class SQLiteUtils {
 		return conn;
 
 	}
-
+	
+	
 	public static final GenericTable importData(DataSource ds, Connection sqliteConnection, String query, String table)
 			throws SQLException {
 		LOG.info("Importing {}...", table);
@@ -189,6 +190,13 @@ public class SQLiteUtils {
 		try (Statement stm = sqliteCon.createStatement()) {
 			stm.execute("PRAGMA auto_vacuum = 1");
 			stm.execute("VACUUM");
+		}
+	}
+	
+	public static final void setVersion(Connection sqliteCon, int version) throws SQLException {
+		sqliteCon.setAutoCommit(true);
+		try (Statement stm = sqliteCon.createStatement()) {
+			stm.execute("PRAGMA user_version = "+ version);
 		}
 	}
 

@@ -9,6 +9,7 @@ public class DatabaseDefinition {
 	private String type;
 	private String _extends;
 	private String description;
+	private Integer version;
 	private List<SchemaElement> schema;
 	
 	
@@ -48,6 +49,12 @@ public class DatabaseDefinition {
 	}
 	public void setExtends(String _extends) {
 		this._extends = _extends;
+	}
+	public Integer getVersion() {
+		return version;
+	}
+	public void setVersion(Integer version) {
+		this.version = version;
 	}
 
 }

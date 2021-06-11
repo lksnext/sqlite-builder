@@ -114,6 +114,9 @@ public class SQLiteDBConfigurableGeneratorImpl implements SQLiteDBConfigurableGe
 			}
 			sqliteCon.commit();
 			SQLiteUtils.vacuum(sqliteCon);
+			if (database.getVersion() != null) {
+				SQLiteUtils.setVersion(sqliteCon, database.getVersion().intValue());	
+			}
 			sqliteCon.close();
 			availableDatabases.add(dbName);
 			dbCreationTime = System.currentTimeMillis() - dbCreationTime;
