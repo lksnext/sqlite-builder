@@ -33,12 +33,12 @@ public class SQLitePathUtils {
 
     private static final URI getPath(URI baseURI, String fileName, String extension) {
         Path basePath = Paths.get(baseURI);
-        return Paths.get(basePath.toString(), fileName + extension).toUri();
+        return basePath.resolve(fileName + extension).toUri();
     }
 
     private static final URI getPath(URI baseURI, String fileName) {
         Path basePath = Paths.get(baseURI);
-        return Paths.get(basePath.toString(), fileName).toUri();
+        return basePath.resolve(fileName).toUri();        
     }
 
     public static final URI getMasterdataDBPath(URI baseUri, String fileName) {

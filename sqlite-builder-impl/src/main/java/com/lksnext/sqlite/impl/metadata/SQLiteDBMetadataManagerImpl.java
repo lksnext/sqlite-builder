@@ -1,7 +1,6 @@
 package com.lksnext.sqlite.impl.metadata;
 
 import java.io.BufferedWriter;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -49,9 +48,10 @@ public class SQLiteDBMetadataManagerImpl implements SQLiteDBMetadataManager {
 		Gson gson = new Gson();
 		URI dbsBaseDir = sqliteConfig.getDatabasePath();
 		URI metaDataPath = SQLitePathUtils.getMasterdataMetadataPath(dbsBaseDir, database);
-		boolean metadataFileExits = fileManager.fileExists(metaDataPath.toString());
+		boolean metadataFileExits = fileManager.fileExists(metaDataPath);
 		if (metadataFileExits) {
-			try (JsonReader reader = new JsonReader(new FileReader(metaDataPath.getPath()))) {
+			
+			try (JsonReader reader = new JsonReader(Files.newBufferedReader(Paths.get(metaDataPath)))) {
 				return gson.fromJson(reader, SQLiteDBMetadata.class);
 			}
 		} else {
@@ -63,7 +63,7 @@ public class SQLiteDBMetadataManagerImpl implements SQLiteDBMetadataManager {
 	public boolean existsMetadata(String database) throws URISyntaxException {
 		URI dbsBaseDir = sqliteConfig.getDatabasePath();
 		URI centerMetaDataPath = SQLitePathUtils.getMasterdataMetadataPath(dbsBaseDir, database);
-		return fileManager.fileExists(centerMetaDataPath.toString());
+		return fileManager.fileExists(centerMetaDataPath);
 	}
 
 	@Override
@@ -73,6 +73,7 @@ public class SQLiteDBMetadataManagerImpl implements SQLiteDBMetadataManager {
 		long metadataTime = System.currentTimeMillis();
 		URI dbsBaseDir = sqliteConfig.getDatabasePath();
 		URI metadataPath = SQLitePathUtils.getMasterdataMetadataPath(dbsBaseDir, database);
+		fileManager.ensureParentExists(metadataPath);
 		try(BufferedWriter writer = Files.newBufferedWriter(Paths.get(metadataPath))) {
 			Gson gson = new GsonBuilder().create();
 			gson.toJson(sqliteDBMetadata, writer);

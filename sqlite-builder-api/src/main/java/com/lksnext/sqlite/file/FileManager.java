@@ -17,8 +17,6 @@ public interface FileManager {
 
     void removeFile(URI uri) throws IOException;
 
-    Boolean fileExists(String path) throws URISyntaxException;
-
     List<String> getFolderFilenames(URI folderURI) throws IOException;
 
     void removeFolder(URI uri) throws IOException;
@@ -34,5 +32,9 @@ public interface FileManager {
     void moveFile(URI source, URI target) throws IOException;
 
     void touch(URI file) throws IOException;
+
+	Boolean fileExists(URI uri) throws URISyntaxException;
+	
+	void ensureParentExists(URI uri) throws IOException;
 
 }

@@ -47,7 +47,6 @@
 			<artifactId>jooq</artifactId>
 		</dependency>
 
-		<!-- Logging -->
 		<!-- Logging SLF4J based -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -137,7 +136,21 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
-		
+
+		<dependency>
+			<groupId>com.google.jimfs</groupId>
+			<artifactId>jimfs</artifactId>
+			<version>1.2</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+
 	</dependencies>
 
 </project>
