@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.jimfs.Configuration;
@@ -34,7 +35,7 @@ import com.lksnext.sqlite.test.config.SQliteBuilderTestConfig;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @EnableConfigurationProperties
-@ContextConfiguration(classes = { SQliteBuilderTestConfig.class })
+@ContextHierarchy(@ContextConfiguration(classes = { SQliteBuilderTestConfig.class }))
 public class SQliteDBMetadataManagerTest {
 
 	@Autowired

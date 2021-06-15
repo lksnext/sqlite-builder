@@ -8,7 +8,6 @@ import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.List;
 
 import org.junit.After;
@@ -19,51 +18,29 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
-import com.lksnext.sqlite.SQLiteDBCleanupStrategy;
 import com.lksnext.sqlite.metadata.SQLiteDBFileInfo;
 import com.lksnext.sqlite.metadata.SQLiteDBMetadata;
 import com.lksnext.sqlite.metadata.SQLiteDBMetadataManager;
+import com.lksnext.sqlite.test.config.CleanupTestConfig;
 import com.lksnext.sqlite.test.config.SQliteBuilderTestConfig;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @EnableConfigurationProperties
-@ContextConfiguration(classes = { SQliteBuilderTestConfig.class })
+@ContextHierarchy({ @ContextConfiguration(classes = { SQliteBuilderTestConfig.class }),
+		@ContextConfiguration(classes = { CleanupTestConfig.class }) })
+@SpringBootConfiguration
 public class SQliteDBMetadataCleanupTest {
-
-	@TestConfiguration
-	static class TestConfig {
-
-		@Bean
-		public SQLiteDBCleanupStrategy cleanupStrategy() {
-
-			return new SQLiteDBCleanupStrategy() {
-
-				@Override
-				public List<SQLiteDBFileInfo> selectDbsToCleanup(SQLiteDBMetadata sqliteDBMetadata, String owner,
-						String database) {
-					SQLiteDBFileInfo fakedb = new SQLiteDBFileInfo();
-					fakedb.setFile("fakedb");
-					fakedb.setMd5("fakedb-hash");
-
-					return Arrays.<SQLiteDBFileInfo>asList(fakedb);
-				}
-
-			};
-
-		}
-
-	}
 
 	@Autowired
 	SQLiteDBMetadataManager sqliteDBMetadataManager;
@@ -127,7 +104,11 @@ public class SQliteDBMetadataCleanupTest {
 				"A HASH3");
 		Assert.assertTrue(metadata.getPrevious().size() == 2);
 		Assert.assertTrue(toDelete.size() == 2);
-		Assert.assertTrue( toDelete.stream().filter(info -> { return info.getMd5().equals("8d23ed6bde518ab13283d7352a4f91ba");}).count() == 1);
-		Assert.assertTrue( toDelete.stream().filter(info -> { return info.getMd5().equals("fakedb-hash");}).count() == 1);
+		Assert.assertTrue(toDelete.stream().filter(info -> {
+			return info.getMd5().equals("8d23ed6bde518ab13283d7352a4f91ba");
+		}).count() == 1);
+		Assert.assertTrue(toDelete.stream().filter(info -> {
+			return info.getMd5().equals("fakedb-hash");
+		}).count() == 1);
 	}
 }
