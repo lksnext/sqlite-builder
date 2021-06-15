@@ -51,7 +51,7 @@ public class SQLitePathUtils {
     
     public static final URI getMasterdataLatestZipPath(URI baseURI) {
     	Path basePath = Paths.get(baseURI);
-        return Paths.get(basePath.toString(), LATEST_ZIPPED_DB_NAME).toUri();
+        return basePath.resolve(LATEST_ZIPPED_DB_NAME).toUri();
     }
 
     public static final String getDBURL(URI tempDir, String fileName) {
