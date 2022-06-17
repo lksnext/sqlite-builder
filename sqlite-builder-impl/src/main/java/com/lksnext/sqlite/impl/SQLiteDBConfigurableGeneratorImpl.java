@@ -16,6 +16,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
+import org.jooq.exception.DataAccessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,7 +74,11 @@ public class SQLiteDBConfigurableGeneratorImpl implements SQLiteDBConfigurableGe
 			int idx = atomicInteger.incrementAndGet();
 			LOG.info("{}/{} Processing DB {}", idx, totalDbs, description);
 			timing.start("Generate db " + description);
-			buildDatabase(definition, context, avalableDatabases);
+			try {
+				buildDatabase(definition, context, avalableDatabases);
+			} catch (DataAccessException e) {
+				LOG.error("Error generating DB {}", description, e);
+			}
 			timing.stop();
 		}
 
@@ -81,7 +86,7 @@ public class SQLiteDBConfigurableGeneratorImpl implements SQLiteDBConfigurableGe
 		LOG.info(timing.prettyPrint());
 	}
 
-	private String  buildDatabase(String definition, Map<String, String> context, Set<String> availableDatabases) {
+	private String buildDatabase(String definition, Map<String, String> context, Set<String> availableDatabases) {
 		DatabaseDefinition database = getDatabaseDefinition(definition);
 
 		String dbName = StrSubstitutor.replace(database.getDatabase(), context);
@@ -91,8 +96,7 @@ public class SQLiteDBConfigurableGeneratorImpl implements SQLiteDBConfigurableGe
 			LOG.info("Database {} is already built", dbName);
 			return dbName;
 		}
-		
-		
+
 		if (isDBLocked(dbName)) {
 			LOG.warn("Database {} is locked. Generation is cancelled", dbName);
 			return null;
@@ -115,7 +119,7 @@ public class SQLiteDBConfigurableGeneratorImpl implements SQLiteDBConfigurableGe
 			sqliteCon.commit();
 			SQLiteUtils.vacuum(sqliteCon);
 			if (database.getVersion() != null) {
-				SQLiteUtils.setVersion(sqliteCon, database.getVersion().intValue());	
+				SQLiteUtils.setVersion(sqliteCon, database.getVersion().intValue());
 			}
 			sqliteCon.close();
 			availableDatabases.add(dbName);
@@ -135,7 +139,7 @@ public class SQLiteDBConfigurableGeneratorImpl implements SQLiteDBConfigurableGe
 				LOG.error("Unable to remove lock for db {}", dbName, e);
 			}
 		}
-		
+
 		return dbName;
 	}
 
